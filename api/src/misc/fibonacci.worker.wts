@@ -1,0 +1,34 @@
+import { from } from 'ix/iterable';
+import { take } from 'ix/iterable/operators';
+import { parentPort } from 'worker_threads';
+
+const lastTwoNumber = [BigInt(0), BigInt(1)];
+function* fibonacciGenerator() {
+  yield lastTwoNumber[0];
+  yield lastTwoNumber[1];
+
+  while (true) {
+    const [number1, number2] = lastTwoNumber;
+    const sum = number1 + number2;
+
+    lastTwoNumber.shift();
+
+    lastTwoNumber.push(sum);
+
+    yield sum;
+  }
+}
+
+parentPort?.on(`message`, async (count?: number) => {
+  let fibonacciIterable = from(fibonacciGenerator());
+
+  if (count != undefined) {
+    fibonacciIterable = fibonacciIterable.pipe(take(Math.max(count, 1)));
+  }
+
+  for (const fibonacciNumber of fibonacciIterable) {
+    parentPort?.postMessage(fibonacciNumber);
+  }
+
+  process.exit(0);
+});

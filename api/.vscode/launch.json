@@ -1,0 +1,18 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "node",
+            "runtimeExecutable": "npm",
+            "request": "launch",
+            "name": "Debug Nest Framework",
+            "runtimeArgs": [
+                "run",
+                "start:debug"
+            ],
+            "sourceMaps": true,
+            "cwd": "${workspaceRoot}",
+            "console": "integratedTerminal"
+        }
+    ]
+}

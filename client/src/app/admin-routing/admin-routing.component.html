@@ -1,0 +1,210 @@
+@let taskError = openAdminTasksErrors | async;
+
+<div class="side-panel"></div>
+
+<div id="table-outer-container">
+
+  <section id="table-container">
+
+    @let taskData = tasks | async;
+
+    @if (taskData) {
+
+
+    <table mat-table [dataSource]="taskData" class="mat-elevation-z8">
+
+      @for (column of columns; track column) {
+      <ng-container [matColumnDef]="column.field">
+        <th mat-header-cell *matHeaderCellDef> {{column.name}} </th>
+        <td mat-cell *matCellDef="let row"> {{row[column.field]}} </td>
+      </ng-container>
+      }
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+
+      <!-- Row shown when there is no matching data. -->
+      <tr class="mat-row" *matNoDataRow>
+        <td class="mat-cell" [attr.colspan]="displayedColumns.length">No data to show</td>
+      </tr>
+    </table>
+
+    }
+
+    @else {
+
+    <div id="spinner-error-display">
+      @if (taskError) {
+
+      <pre>{{taskError | json }}</pre>
+
+      }
+
+      @else {
+
+      <mat-spinner></mat-spinner>
+
+      }
+
+    </div>
+
+    }
+  </section>
+</div>
+
+<div class="side-panel">
+
+  @if (!taskError) {
+
+  <div id="right-panel">
+
+    @let scrollBarWidth = binConfigScroller.offsetWidth - binConfigScroller.clientWidth;
+    @let rightPadding = 'max(calc(var(--gap-size) - ' + scrollBarWidth + 'px), 2px)';
+
+    <span id="largestCount" #largestCount>{{maxPartCount | async}}</span>
+
+    @let partCountWidth = largestCount.getBoundingClientRect().width;
+
+    <div id="sticky-section">
+      <div class="buttons-container">
+        <div>
+          @let selectedCount = selectedBinCount | async;
+
+          @let downloadButtonText = (selectedCount?.selected == 0 || selectedCount?.selected == selectedCount?.all) ?
+          'all' : 'selected';
+
+          @let downloadLinkAndName = downloadLink | async;
+
+          <a mat-fab extended [href]="downloadLinkAndName?.url" [download]="downloadLinkAndName?.name"
+            [disabled]="(selectedCount?.all ?? 0) == 0" [attr.aria-label]="'Download ' + downloadButtonText">
+
+            <mat-icon>file_download</mat-icon>
+
+            <div id="download-button-text-container">
+              <span #downloadButtonTextSizer id="download-button-text-sizer">{{downloadButtonText}}</span>
+
+              <span [style.width.px]="downloadButtonTextSizer.getBoundingClientRect().width"
+                id="download-button-text">{{downloadButtonText}}</span>
+            </div>
+          </a>
+        </div>
+
+        <mat-slide-toggle #editSwitch labelPosition="before">Edit</mat-slide-toggle>
+      </div>
+
+      @let bins = binsNotAssignedToTeam | async;
+
+      @if (bins && bins.length > 0) {
+      <mat-form-field floatLabel="always" appearance="outline" class="team-members">
+        <mat-label>No team</mat-label>
+
+        <mat-chip-grid #noTeamMembersDisplay multiple aria-label="No team distribution bins"
+          class="mat-mdc-chip-set-stacked">
+
+
+          @for (bin of bins; track bin.name) {
+
+          <mat-chip-option [selected]="bin.isSelected" (selectionChange)="onBinSelectionChange($event.selected, bin)">
+            <div class="bin-data-row">
+              <span class="bin-name">{{bin.name}}</span>
+
+              @if (partCountWidth ?? 0 > 0) {
+              <mat-divider vertical="true"></mat-divider>
+              <span [style.width.px]="partCountWidth" class="bin-part-count"
+                [style.--part-count]="bin.partCount"></span>
+              }
+            </div>
+          </mat-chip-option>
+
+          }
+
+        </mat-chip-grid>
+
+        <input [disabled]="true" [matChipInputFor]="noTeamMembersDisplay" />
+      </mat-form-field>
+      }
+    </div>
+
+    <section #binConfigScroller id="bin-config-scroller">
+
+      <div [style.padding-right]="rightPadding" class="bin-config-container">
+        @let editingDisabled = !editSwitch.checked;
+
+        @let binsByTeam = binsWithPartCountByTeam | async;
+
+        <mat-form-field floatLabel="always" appearance="outline">
+          <mat-label>Absolute team vehicle lines</mat-label>
+          <mat-chip-grid #vehicleLinesDisplay aria-label="Absolute team vehicle lines">
+
+            @for (vehicleLine of vehicleLines(); track vehicleLine) {
+
+            <mat-chip-row>
+              {{vehicleLine}}
+
+              <button matChipRemove [disabled]="editingDisabled" [attr.aria-label]="'Remove ' + vehicleLine"
+                (click)="removeVehicleLine($index)">
+                <mat-icon>cancel</mat-icon>
+              </button>
+            </mat-chip-row>
+
+            }
+
+          </mat-chip-grid>
+
+
+          <input placeholder="Add vehicle line..." [disabled]="editingDisabled" [matChipInputFor]="vehicleLinesDisplay"
+            (matChipInputTokenEnd)="addVehicleLine($event.value); $event.chipInput.clear()"
+            [matAutocomplete]="vehicleLineAutoComplete" [(ngModel)]="currentVehicleLine" />
+
+          <mat-autocomplete #vehicleLineAutoComplete
+            (optionSelected)="addVehicleLine($event.option.viewValue); currentVehicleLine.set('')">
+            @for (vehicleLineForAutoComplete of vehicleLinesForAutoComplete | async; track vehicleLineForAutoComplete) {
+
+            <mat-option [value]="vehicleLineForAutoComplete">{{vehicleLineForAutoComplete}}</mat-option>
+
+            }
+          </mat-autocomplete>
+        </mat-form-field>
+
+        @for (team of teams; track team) {
+
+        @let bins = binsByTeam?.get(team);
+
+        <mat-form-field floatLabel="always" appearance="outline" class="team-members">
+          <mat-label>{{team}} team</mat-label>
+
+          <mat-chip-grid #teamMembersDisplay multiple attr.aria-label="{{team}} team distribution bins"
+            class="mat-mdc-chip-set-stacked">
+
+            @for (bin of bins; track bin.name) {
+
+            <mat-chip-option [selected]="bin.isSelected" (selectionChange)="onBinSelectionChange($event.selected, bin)">
+              <div class="bin-data-row">
+                <span class="bin-name">{{bin.name}}</span>
+
+                @if (partCountWidth ?? 0 > 0) {
+                <mat-divider vertical="true"></mat-divider>
+                <span [style.width.px]="partCountWidth" class="bin-part-count"
+                  [style.--part-count]="bin.partCount"></span>
+                }
+              </div>
+              <button matChipRemove [disabled]="editingDisabled" [attr.aria-label]="'Remove ' + bin.name"
+                (click)="removeBin(bin, team)">
+                <mat-icon>cancel</mat-icon>
+              </button>
+            </mat-chip-option>
+
+            }
+          </mat-chip-grid>
+
+          <input [disabled]="editingDisabled" placeholder="Add name..." [matChipInputFor]="teamMembersDisplay"
+            (matChipInputTokenEnd)="addBin($event.value, team); $event.chipInput.clear()" />
+        </mat-form-field>
+
+        }
+      </div>
+
+    </section>
+  </div>
+  }
+</div>

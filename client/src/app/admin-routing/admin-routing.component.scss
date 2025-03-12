@@ -1,0 +1,219 @@
+@property --part-count {
+  syntax: "<integer>";
+  inherits: false;
+  initial-value: 0;
+}
+
+:host ::ng-deep {
+  .mat-mdc-standard-chip {
+    .mdc-evolution-chip__cell--primary,
+    .mdc-evolution-chip__action--primary,
+    .mat-mdc-chip-action-label {
+      overflow: hidden;
+    }
+  }
+
+  .mat-mdc-form-field-subscript-wrapper {
+    display: none;
+  }
+
+  .team-members {
+    .mat-mdc-standard-chip {
+      .mdc-evolution-chip__cell--primary,
+      .mdc-evolution-chip__action--primary,
+      .mat-mdc-chip-action-label {
+        width: 100%;
+      }
+    }
+
+    .mdc-evolution-chip-set__chips {
+      flex-flow: column;
+      max-width: 100%;
+    }
+
+    .mat-mdc-form-field-infix {
+      width: auto;
+    }
+  }
+}
+
+:host {
+  display: flex;
+
+  width: 100%;
+  height: 100%;
+}
+
+#table-spacer {
+  flex: 1 1 0px;
+}
+
+#table-outer-container {
+  overflow: hidden;
+  display: flex;
+
+  #table-container {
+    width: 1035px;
+
+    overflow: auto;
+
+    #spinner-error-display {
+      width: 100%;
+      height: 100%;
+
+      display: flex;
+      flex-direction: column;
+
+      justify-content: center;
+      align-items: center;
+
+      pre {
+        text-wrap: auto;
+      }
+    }
+  }
+}
+
+.side-panel {
+  flex: 1 1 0px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+
+  #right-panel {
+    display: flex;
+    flex-direction: column;
+
+    max-height: 100%;
+
+    #largestCount {
+      position: fixed;
+      visibility: hidden;
+    }
+
+    #sticky-section {
+      display: flex;
+      flex-direction: column;
+
+      gap: var(--gap-size);
+
+      background-color: var(--mat-sys-surface);
+      z-index: 1;
+
+      padding-top: calc(var(--gap-size) / 2);
+      padding-bottom: calc(var(--gap-size) / 2);
+      padding-left: var(--gap-size);
+      padding-right: var(--gap-size);
+
+      .buttons-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+
+        #download-button-text-container {
+          display: flex;
+
+          #download-button-text-sizer {
+            visibility: hidden;
+            position: fixed;
+          }
+
+          #download-button-text {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            text-align: start;
+
+            transition: width var(--transition-duration);
+          }
+        }
+      }
+    }
+
+    #bin-config-scroller {
+      display: flex;
+      flex-direction: column;
+
+      overflow-y: auto;
+      overflow-x: hidden;
+      scrollbar-gutter: stable;
+      scrollbar-width: thin;
+
+      padding-left: var(--gap-size);
+
+      .bin-config-container {
+        display: flex;
+        flex-direction: column;
+
+        gap: var(--gap-size);
+        padding-top: calc(var(--gap-size) / 2);
+        padding-bottom: calc(var(--gap-size) / 2);
+      }
+    }
+
+    mat-form-field {
+      max-width: 300px;
+
+      mat-chip-row {
+        flex-grow: 1;
+      }
+
+      mat-chip-option {
+        .bin-data-row {
+          display: flex;
+          flex-direction: row;
+          width: 100%;
+        }
+
+        mat-divider {
+          margin-right: calc(var(--gap-size) / 2);
+          margin-left: calc(var(--gap-size) / 2);
+        }
+
+        .bin-name {
+          overflow: hidden;
+          text-overflow: ellipsis;
+          flex: 1 1 0px;
+        }
+
+        .bin-part-count {
+          text-align: right;
+
+          transition: width var(--transition-duration),
+            --part-count var(--transition-duration);
+          counter-set: part-count var(--part-count);
+        }
+
+        .bin-part-count::after {
+          content: counter(part-count);
+        }
+      }
+
+      input,
+      button {
+        transition: opacity var(--transition-duration),
+          max-height var(--transition-duration),
+          width var(--transition-duration);
+      }
+
+      input {
+        display: block;
+
+        max-height: calc-size(fit-content, size);
+      }
+
+      input:disabled,
+      button:disabled {
+        opacity: 50%;
+      }
+
+      input:disabled {
+        max-height: 0px;
+      }
+
+      button:disabled {
+        width: 0px;
+      }
+    }
+  }
+}
