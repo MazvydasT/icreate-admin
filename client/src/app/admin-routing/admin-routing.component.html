@@ -152,12 +152,13 @@
           </mat-chip-grid>
 
 
-          <input placeholder="Add vehicle line..." [disabled]="editingDisabled" [matChipInputFor]="vehicleLinesDisplay"
+          <input #vehicleLineInput placeholder="Add vehicle line..." [disabled]="editingDisabled"
+            [matChipInputFor]="vehicleLinesDisplay"
             (matChipInputTokenEnd)="addVehicleLine($event.value); $event.chipInput.clear()"
             [matAutocomplete]="vehicleLineAutoComplete" [(ngModel)]="currentVehicleLine" />
 
           <mat-autocomplete #vehicleLineAutoComplete
-            (optionSelected)="addVehicleLine($event.option.viewValue); currentVehicleLine.set('')">
+            (optionSelected)="addVehicleLine($event.option.viewValue); currentVehicleLine.set(vehicleLineInput.value = '')">
             @for (vehicleLineForAutoComplete of vehicleLinesForAutoComplete | async; track vehicleLineForAutoComplete) {
 
             <mat-option [value]="vehicleLineForAutoComplete">{{vehicleLineForAutoComplete}}</mat-option>
