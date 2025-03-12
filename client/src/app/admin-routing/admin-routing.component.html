@@ -151,7 +151,6 @@
 
           </mat-chip-grid>
 
-
           <input #vehicleLineInput placeholder="Add vehicle line..." [disabled]="editingDisabled"
             [matChipInputFor]="vehicleLinesDisplay"
             (matChipInputTokenEnd)="addVehicleLine($event.value); $event.chipInput.clear()"
