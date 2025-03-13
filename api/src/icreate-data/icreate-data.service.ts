@@ -35,6 +35,8 @@ export class IcreateDataService {
         .getLastModified(lastModifiedConfig, cacheKey)
         .pipe(
           switchMap(lastModified => {
+            lastModified = `W/${lastModified}`;
+
             const { previousLastModified, data } = !!cacheKey
               ? (dataCache.get(cacheKey) ?? {})
               : {};
