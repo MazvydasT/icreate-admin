@@ -513,31 +513,46 @@ export class AdminRoutingComponent {
 
   readonly downloadLink = this.tasks.pipe(
     switchMap(async (tasks) => {
-      const dataToExport = toArray(
-        from(tasks).pipe(
-          mapIx((row: any) =>
-            toArray(
-              from(this.columns).pipe(
-                mapIx(({ exportField, field }) => row[exportField ?? field])
+      const dataToExportByAssignee = from(tasks).pipe(
+        groupBy(({ hasAssignee, assignee, newAssignee }) =>
+          (hasAssignee ? assignee : newAssignee)?.trim()?.toLocaleLowerCase()
+        ),
+        orderBy(({ key }) => key),
+        mapIx((group) => ({
+          assignee: group.key,
+          rows: toArray(
+            group.pipe(
+              mapIx((row: any) =>
+                toArray(
+                  from(this.columns).pipe(
+                    mapIx(({ exportField, field }) => row[exportField ?? field])
+                  )
+                )
               )
             )
-          )
-        )
+          ),
+        }))
       );
 
       const workbook = new Workbook();
-      const worksheet = workbook.addWorksheet(`Data`);
 
-      worksheet.addTable({
-        name: `DataTable`,
-        ref: `A1`,
-        style: {
-          theme: `TableStyleMedium4`,
-          showRowStripes: true,
-        },
-        columns: this.columns.map(({ name }) => ({ name, filterButton: true })),
-        rows: dataToExport,
-      });
+      for (const { assignee, rows } of dataToExportByAssignee) {
+        const worksheet = workbook.addWorksheet(assignee);
+
+        worksheet.addTable({
+          name: `DataTable_${assignee}`,
+          ref: `A1`,
+          style: {
+            theme: `TableStyleMedium4`,
+            showRowStripes: true,
+          },
+          columns: this.columns.map(({ name }) => ({
+            name,
+            filterButton: true,
+          })),
+          rows,
+        });
+      }
 
       const buffer = await workbook.xlsx.writeBuffer({
         useSharedStrings: true,
