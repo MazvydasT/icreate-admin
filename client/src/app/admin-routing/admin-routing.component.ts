@@ -44,7 +44,7 @@ import {
   skip,
   startWith,
   switchAll,
-  switchMap
+  switchMap,
 } from 'rxjs';
 import { LuxonPipe } from '../luxon.pipe';
 import { AdminRoutingService } from './admin-routing.service';
@@ -496,7 +496,7 @@ export class AdminRoutingComponent {
 
       return toArray(
         from(tasks).pipe(
-          orderByDescending(({ landed_at_date }) => landed_at_date.getTime()),
+          orderBy(({ landed_at_date }) => landed_at_date.getTime()),
 
           filterIx(({ assignee, newAssignee, hasAssignee }) =>
             namesToKeepCount == 0
