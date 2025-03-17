@@ -194,7 +194,12 @@ export class AdminRoutingComponent {
     { field: `status`, name: `Status` },
     { field: `vehicle_line`, name: `Vehicle line` },
     { field: `build_event`, name: `Build event` },
-    { field: `landed_at`, name: `Landed at`, exportField: `landed_at_date` },
+    {
+      field: `landed_at`,
+      name: `Landed at`,
+      exportField: `landed_at_date`,
+      exportColumnWidth: 11.15,
+    },
     { field: `assignee`, name: `Assignee` },
     { field: `part_count`, name: `Part count` },
     { field: `team`, name: `Team` },
@@ -551,6 +556,12 @@ export class AdminRoutingComponent {
             filterButton: true,
           })),
           rows,
+        });
+
+        this.columns.forEach(({ exportColumnWidth }, index) => {
+          if (!!exportColumnWidth) {
+            worksheet.columns[index].width = exportColumnWidth;
+          }
         });
       }
 
