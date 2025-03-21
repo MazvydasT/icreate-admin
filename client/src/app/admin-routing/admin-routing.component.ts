@@ -1,148 +1,59 @@
 import { AsyncPipe, JsonPipe } from '@angular/common';
-import {
-  ChangeDetectionStrategy,
-  Component,
-  DestroyRef,
-  inject,
-  model,
-} from '@angular/core';
-import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { FormsModule } from '@angular/forms';
-import { MatAutocompleteModule } from '@angular/material/autocomplete';
-import { MatButtonModule } from '@angular/material/button';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatDividerModule } from '@angular/material/divider';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTableModule } from '@angular/material/table';
-import { ActivatedRoute, ActivationEnd, Router } from '@angular/router';
-import { Workbook } from 'exceljs';
-import { concat, count, first, from, sum, toArray, toMap } from 'ix/iterable';
+
+import { concat, first, from, sum, toArray } from 'ix/iterable';
 import {
   concatWith,
-  distinct,
   filter as filterIx,
-  flatMap,
   groupBy,
   map as mapIx,
   orderBy,
   orderByDescending,
   tap as tapIx,
 } from 'ix/iterable/operators';
+
 import {
-  BehaviorSubject,
   catchError,
   combineLatest,
-  filter,
   ignoreElements,
   map,
-  Observable,
   of,
-  shareReplay,
-  skip,
-  startWith,
-  switchAll,
-  switchMap,
+  share,
+  Subject
 } from 'rxjs';
+
 import { LuxonPipe } from '../luxon.pipe';
 import { AdminRoutingService } from './admin-routing.service';
+import { columns } from './configs/columns';
+import { RightPanelComponent } from './right-panel/right-panel.component';
 import { Bin } from './types/Bin';
 import { OpenAdminTask } from './types/OpenAdminTask';
-import {
-  queryParamByTeamName,
-  TeamName,
-  teamNameByQueryParam,
-  teamNames,
-} from './types/Team';
+import { TeamName } from './types/Team';
 
 @Component({
   selector: 'app-admin-routing',
   imports: [
-    MatTableModule,
-    MatFormFieldModule,
-    MatChipsModule,
-    MatIconModule,
-    MatButtonModule,
-    MatDividerModule,
-    MatProgressSpinnerModule,
-    MatAutocompleteModule,
-    MatSlideToggleModule,
-    FormsModule,
     AsyncPipe,
     JsonPipe,
+
+    MatProgressSpinnerModule,
+    MatTableModule,
+
+    RightPanelComponent,
   ],
   templateUrl: './admin-routing.component.html',
   styleUrl: './admin-routing.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AdminRoutingComponent {
+  readonly columns = columns;
+
   private readonly adminRoutingService = inject(AdminRoutingService);
-  private readonly router = inject(Router);
-  private readonly activatedRoute = inject(ActivatedRoute);
 
-  private readonly activationEndQueryParams = this.router.events.pipe(
-    filter((event) => event instanceof ActivationEnd),
-    map(({ snapshot: { queryParams } }) => queryParams),
-    startWith(this.router.routerState.snapshot.root.queryParams),
-    shareReplay(1)
-  );
-
-  readonly vehicleLines = toSignal(
-    this.activationEndQueryParams.pipe(
-      map((queryParams) => {
-        let vehicleLines: string | string[] = queryParams[`vl`] ?? [];
-
-        if (!Array.isArray(vehicleLines)) vehicleLines = [vehicleLines];
-
-        return toArray(
-          from(vehicleLines).pipe(
-            mapIx((vehicleLine) => vehicleLine.trim()),
-            filterIx((vehicleLine) => vehicleLine.length > 0),
-            distinct({
-              comparer: (x, y) =>
-                x.toLocaleLowerCase() == y.toLocaleLowerCase(),
-            })
-          )
-        );
-      })
-    ),
-    { requireSync: true }
-  );
-
-  private readonly newVehicleLines = new BehaviorSubject(this.vehicleLines());
-
-  private readonly vehicleLinesSet = toObservable(this.vehicleLines).pipe(
-    map(
-      (vehicleLines) =>
-        new Set(
-          from(vehicleLines).pipe(
-            mapIx((vehicleLine) => vehicleLine.toLocaleLowerCase())
-          )
-        )
-    ),
-    shareReplay(1)
-  );
-
-  readonly currentVehicleLine = model(``);
-
-  readonly vehicleLinesForAutoComplete = combineLatest([
-    this.adminRoutingService.getVehicleLines(),
-    this.vehicleLinesSet,
-    toObservable(this.currentVehicleLine),
-  ]).pipe(
-    map(([allVehicleLines, vehicleLinesSet, currentVehicleLine]) =>
-      allVehicleLines.filter(
-        (vehicleLine) =>
-          !vehicleLinesSet.has(vehicleLine.toLocaleLowerCase()) &&
-          vehicleLine
-            .toLocaleLowerCase()
-            .includes((currentVehicleLine ?? ``).toLocaleLowerCase())
-      )
-    )
-  );
-
+  readonly vehicleLinesSet = new Subject<Set<string>>();
   private readonly openAdminTasks = combineLatest([
     this.adminRoutingService.getOpenAdminTasks(),
     this.vehicleLinesSet,
@@ -179,7 +90,7 @@ export class AdminRoutingComponent {
         team: assignTeam(record),
       }));
     }),
-    shareReplay(1)
+    share()
   );
 
   readonly openAdminTasksErrors = this.openAdminTasks.pipe(
@@ -187,114 +98,12 @@ export class AdminRoutingComponent {
     catchError((err) => of(err))
   );
 
-  readonly teams = teamNames;
+  readonly displayedColumns = columns.map(({ field }) => field);
 
-  readonly columns = [
-    { field: `change_number`, name: `Change` },
-    { field: `status`, name: `Status` },
-    { field: `vehicle_line`, name: `Vehicle line` },
-    { field: `build_event`, name: `Build event` },
-    {
-      field: `landed_at`,
-      name: `Landed at`,
-      exportField: `landed_at_date`,
-      exportColumnWidth: 11.15,
-    },
-    { field: `assignee`, name: `Assignee` },
-    { field: `part_count`, name: `Part count` },
-    { field: `team`, name: `Team` },
-    { field: `newAssignee`, name: `New assignee` },
-  ];
-
-  readonly displayedColumns = this.columns.map(({ field }) => field);
-
-  private readonly binSelectionChange = new BehaviorSubject(true);
-
-  private readonly binsByName = new Map<string, Bin>();
-  private readonly bins = toSignal(
-    this.activationEndQueryParams.pipe(
-      map((queryParams) => {
-        const distinctNames = toArray(
-          from(teamNameByQueryParam.entries()).pipe(
-            flatMap(([queryParamName, teamName]) => {
-              let names: string | string[] = queryParams[queryParamName] ?? [];
-
-              if (!Array.isArray(names)) names = [names];
-
-              return from(names).pipe(
-                mapIx((name) => ({ name: name.trim(), teamName }))
-              );
-            }),
-            filterIx(({ name }) => name.length > 0),
-            distinct({
-              comparer: (x, y) =>
-                x.name.toLocaleLowerCase() == y.name.toLocaleLowerCase() &&
-                x.teamName.toLocaleLowerCase() ==
-                  y.teamName.toLocaleLowerCase(),
-            }),
-            mapIx(({ name, teamName }, index) => ({ name, teamName, index })),
-            groupBy(
-              ({ name }) => name,
-              ({ teamName, index }) => ({ teamName, index })
-            ),
-            mapIx((group) => ({
-              name: group.key,
-              teamNames: group.pipe(mapIx(({ teamName }) => teamName)),
-              indices: group.pipe(mapIx(({ index }) => index)),
-            }))
-          )
-        );
-
-        new Set(this.binsByName.keys())
-          .difference(new Set(distinctNames.map(({ name }) => name)))
-          .forEach((name) => this.binsByName.delete(name));
-
-        return distinctNames.map(({ name, teamNames, indices }) => {
-          let existingBin = this.binsByName.get(name);
-
-          if (!existingBin) {
-            existingBin = {
-              name,
-              partCount: 0,
-              isSelected: false,
-              teams: new Set(),
-              indices: new Set(),
-            };
-
-            this.binsByName.set(name, existingBin);
-          }
-
-          existingBin.teams = new Set(teamNames);
-          existingBin.indices = new Set(indices);
-
-          return existingBin;
-        });
-      })
-    ),
-    { requireSync: true }
-  );
-
-  private readonly newBinNames = new BehaviorSubject(
-    Object.fromEntries(
-      from(this.bins()).pipe(
-        flatMap(({ name, teams }) =>
-          from(teams).pipe(mapIx((team) => ({ team, name })))
-        ),
-        groupBy(
-          ({ team }) => queryParamByTeamName.get(team)!,
-          ({ name }) => name
-        ),
-        mapIx((group) => [group.key, toArray(group)])
-      )
-    )
-  );
-
+  readonly bins = new Subject<{ bins: Bin[]; binsByName: Map<string, Bin> }>();
   private readonly notInTeamBinsByName = new Map<string, Bin>();
-  readonly tasksAndBins = combineLatest([
-    toObservable(this.bins),
-    this.openAdminTasks,
-  ]).pipe(
-    map(([bins, tasks]) => {
+  readonly tasksAndBins = combineLatest([this.bins, this.openAdminTasks]).pipe(
+    map(([{ bins, binsByName }, tasks]) => {
       bins.forEach((bin) => (bin.partCount = 0));
 
       const tasksIterable = from(tasks);
@@ -315,9 +124,7 @@ export class AdminRoutingComponent {
           filterIx(({ hasAssignee }) => hasAssignee),
           mapIx((task) => ({ ...task, newAssignee: undefined })),
           tapIx(({ assignee, part_count }) => {
-            const bin = this.binsByName.get(
-              assignee.trim().toLocaleLowerCase()
-            );
+            const bin = binsByName.get(assignee.trim().toLocaleLowerCase());
 
             if (!!bin) bin.partCount += part_count;
           })
@@ -413,77 +220,14 @@ export class AdminRoutingComponent {
         binsNotAssignedToTeam,
       };
     }),
-    shareReplay(1)
-  );
-
-  private readonly binsWithPartCount = this.tasksAndBins.pipe(
-    map(({ bins }) => of(bins)),
-    startWith(toObservable(this.bins)),
-    switchAll(),
-    shareReplay(1)
-  );
-
-  readonly binsWithPartCountByTeam = this.binsWithPartCount.pipe(
-    map((bins) =>
-      toMap(
-        from(bins).pipe(
-          flatMap((bin) => {
-            const indicesArray = Array.from(bin.indices);
-            return from(bin.teams).pipe(
-              mapIx((team, index) => ({
-                team,
-                bin,
-                index: indicesArray[index],
-              }))
-            );
-          }),
-          orderBy(({ index }) => index),
-          groupBy(
-            ({ team }) => team,
-            ({ bin }) => bin
-          )
-        ),
-        {
-          keySelector: ({ key }) => key,
-          elementSelector: (group) => toArray(group),
-        }
-      )
-    )
+    share()
   );
 
   readonly binsNotAssignedToTeam = this.tasksAndBins.pipe(
-    map(({ binsNotAssignedToTeam }) => binsNotAssignedToTeam),
-    shareReplay(1)
+    map(({ binsNotAssignedToTeam }) => binsNotAssignedToTeam)
   );
 
-  readonly maxPartCount = combineLatest([
-    this.binsWithPartCount,
-    this.binsNotAssignedToTeam,
-  ]).pipe(
-    map(([binsWithPartCount, binsNotAssignedToTeam]) =>
-      first(
-        concat(binsWithPartCount, binsNotAssignedToTeam).pipe(
-          mapIx((bin) => bin.partCount),
-          orderByDescending((partCount) => partCount)
-        )
-      )
-    )
-  );
-
-  readonly selectedBinCount = combineLatest([
-    this.tasksAndBins,
-    this.binSelectionChange,
-  ]).pipe(
-    map(([{ bins, binsNotAssignedToTeam }]) => ({
-      selected: count(
-        concat(bins, binsNotAssignedToTeam).pipe(
-          filterIx(({ isSelected }) => isSelected)
-        )
-      ),
-      all: bins.length + binsNotAssignedToTeam.length,
-    }))
-  );
-
+  readonly binSelectionChange = new Subject<boolean>();
   readonly tasks = combineLatest([
     this.tasksAndBins,
     this.binSelectionChange,
@@ -513,182 +257,6 @@ export class AdminRoutingComponent {
         )
       );
     }),
-    shareReplay(1)
+    share()
   );
-
-  readonly downloadLink = this.tasks.pipe(
-    switchMap(async (tasks) => {
-      const dataToExportByAssignee = from(tasks).pipe(
-        groupBy(({ hasAssignee, assignee, newAssignee }) =>
-          (hasAssignee ? assignee : newAssignee)?.trim()?.toLocaleLowerCase()
-        ),
-        orderBy(({ key }) => key),
-        mapIx((group) => ({
-          assignee: group.key,
-          rows: toArray(
-            group.pipe(
-              mapIx((row: any) =>
-                toArray(
-                  from(this.columns).pipe(
-                    mapIx(({ exportField, field }) => row[exportField ?? field])
-                  )
-                )
-              )
-            )
-          ),
-        }))
-      );
-
-      const workbook = new Workbook();
-
-      for (const { assignee, rows } of dataToExportByAssignee) {
-        const worksheet = workbook.addWorksheet(assignee);
-
-        worksheet.addTable({
-          name: `DataTable_${assignee}`,
-          ref: `A1`,
-          style: {
-            theme: `TableStyleMedium4`,
-            showRowStripes: true,
-          },
-          columns: this.columns.map(({ name }) => ({
-            name,
-            filterButton: true,
-          })),
-          rows,
-        });
-
-        this.columns.forEach(({ exportColumnWidth }, index) => {
-          if (!!exportColumnWidth) {
-            worksheet.columns[index].width = exportColumnWidth;
-          }
-        });
-      }
-
-      const buffer = await workbook.xlsx.writeBuffer({
-        useSharedStrings: true,
-      });
-
-      return new Blob([buffer]);
-    }),
-    switchMap(
-      (blob) =>
-        new Observable<{ url: string; name: string }>((subscriber) => {
-          const url = URL.createObjectURL(blob);
-
-          subscriber.next({
-            url,
-            name: `Admin routing ${new LuxonPipe().transform(
-              new Date(),
-              `yyyyMMddHHmmss`
-            )}.xlsx`,
-          });
-
-          return () => URL.revokeObjectURL(url);
-        })
-    )
-  );
-
-  constructor(private readonly destroyRef: DestroyRef) {
-    const updateURLSubscription = combineLatest([
-      this.newVehicleLines,
-      this.newBinNames,
-    ])
-      .pipe(skip(1))
-      .subscribe(([newVehicleLines, newBinNames]) => {
-        this.router.navigate([], {
-          relativeTo: this.activatedRoute,
-          queryParams: { vl: newVehicleLines, ...newBinNames },
-        });
-      });
-
-    this.destroyRef.onDestroy(() => updateURLSubscription.unsubscribe());
-  }
-
-  removeBin(bin: Bin, teamName: TeamName) {
-    bin.teams.delete(teamName);
-
-    const newBinNames = Object.fromEntries(
-      toArray(
-        from(this.bins()).pipe(
-          filterIx(({ teams }) => teams.size > 0),
-          flatMap(({ name, teams }) =>
-            from(teams).pipe(mapIx((teamName) => ({ name, teamName })))
-          ),
-          groupBy(
-            ({ teamName }) => queryParamByTeamName.get(teamName)!,
-            ({ name }) => name
-          ),
-          mapIx((group) => [group.key, toArray(group)])
-        )
-      )
-    );
-
-    this.newBinNames.next(newBinNames);
-  }
-
-  addBin(binName: string, teamName: TeamName) {
-    binName = binName.trim();
-
-    if (binName.length == 0) return;
-
-    const newBinNames = Object.fromEntries(
-      toArray(
-        from(this.bins()).pipe(
-          flatMap(({ name, teams }) => {
-            return from(teams).pipe(mapIx((teamName) => ({ name, teamName })));
-          }),
-          concatWith([{ name: binName, teamName }]),
-          distinct({
-            comparer(x, y) {
-              return (
-                x.name.toLocaleLowerCase() == y.name.toLocaleLowerCase() &&
-                x.teamName.toLocaleLowerCase() == y.teamName.toLocaleLowerCase()
-              );
-            },
-          }),
-          groupBy(
-            ({ teamName }) => queryParamByTeamName.get(teamName)!,
-            ({ name }) => name
-          ),
-          mapIx((group) => [group.key, toArray(group)])
-        )
-      )
-    );
-
-    this.newBinNames.next(newBinNames);
-  }
-
-  onBinSelectionChange(isSelected: boolean, bin: Bin) {
-    bin.isSelected = isSelected;
-
-    this.binSelectionChange.next(true);
-  }
-
-  addVehicleLine(vehicleLine: string) {
-    vehicleLine = vehicleLine.trim();
-
-    if (vehicleLine.length == 0) return;
-
-    this.newVehicleLines.next(
-      toArray(
-        from(this.vehicleLines()).pipe(
-          concatWith([vehicleLine]),
-          distinct({
-            comparer: (x, y) => x.toLocaleLowerCase() == y.toLocaleLowerCase(),
-          })
-        )
-      )
-    );
-  }
-
-  removeVehicleLine(vehicleLineIndex: number) {
-    this.newVehicleLines.next(
-      toArray(
-        from(this.vehicleLines()).pipe(
-          filterIx((_, index) => index != vehicleLineIndex)
-        )
-      )
-    );
-  }
 }
