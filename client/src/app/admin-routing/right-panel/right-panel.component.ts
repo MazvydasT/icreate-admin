@@ -49,7 +49,16 @@ import {
   switchMap,
 } from 'rxjs';
 
-import { Workbook } from 'exceljs';
+import xlsxInit, {
+  Format,
+  Table,
+  TableColumn,
+  TableStyle,
+  Workbook,
+} from 'wasm-xlsxwriter/web';
+
+//@ts-expect-error
+import wasmXlsxWriterPath from 'wasm-xlsxwriter/web/wasm_xlsxwriter_bg.wasm';
 
 import { LuxonPipe } from '../../luxon.pipe';
 import { AdminRoutingService } from '../admin-routing.service';
@@ -289,13 +298,18 @@ export class RightPanelComponent {
     )
   );
 
-  readonly downloadLink = toObservable(this.tasks).pipe(
-    switchMap(async (tasks) => {
+  readonly downloadLink = combineLatest([
+    toObservable(this.tasks),
+    xlsxInit({ module_or_path: wasmXlsxWriterPath }),
+  ]).pipe(
+    switchMap(async ([tasks]) => {
       if (tasks.length == 0) return null;
 
       const dataToExportByAssignee = from(tasks).pipe(
         groupBy(({ hasAssignee, assignee, newAssignee }) =>
-          (hasAssignee ? assignee : newAssignee)?.trim()?.toLocaleLowerCase()
+          (hasAssignee ? assignee : newAssignee ?? assignee)
+            ?.trim()
+            ?.toLocaleLowerCase()
         ),
         orderBy(({ key }) => key),
         mapIx((group) => ({
@@ -315,36 +329,41 @@ export class RightPanelComponent {
       );
 
       const workbook = new Workbook();
+      const table = new Table()
+        .setColumns(
+          columns.map(({ name }) => new TableColumn().setHeader(name))
+        )
+        .setStyle(TableStyle.Medium4);
 
       for (const { assignee, rows } of dataToExportByAssignee) {
-        const worksheet = workbook.addWorksheet(assignee);
+        const rowCount = rows.length;
 
-        worksheet.addTable({
-          name: `DataTable_${assignee}`,
-          ref: `A1`,
-          style: {
-            theme: `TableStyleMedium4`,
-            showRowStripes: true,
-          },
-          columns: columns.map(({ name }) => ({
-            name,
-            filterButton: true,
-          })),
-          rows,
-        });
+        const worksheet = workbook
+          .addWorksheet()
+          .setName(assignee)
+          .writeRowMatrix(1, 0, rows)
+          .addTable(0, 0, rowCount, rows[0].length - 1, table);
 
-        columns.forEach(({ exportColumnWidth }, index) => {
+        columns.forEach(({ exportColumnWidth, exportNumberFormat }, index) => {
           if (!!exportColumnWidth) {
-            worksheet.columns[index].width = exportColumnWidth;
+            worksheet.setColumnWidth(index, exportColumnWidth);
+          }
+
+          if (!!exportNumberFormat) {
+            worksheet.setRangeWithFormat(
+              1,
+              index,
+              rowCount,
+              index,
+              new Format().setNumFormat(exportNumberFormat)
+            );
           }
         });
       }
 
-      const buffer = await workbook.xlsx.writeBuffer({
-        useSharedStrings: true,
-      });
+      const byteArray = workbook.saveToBufferSync();
 
-      return new Blob([buffer]);
+      return new Blob([byteArray]);
     }),
     switchMap((blob) =>
       !blob
