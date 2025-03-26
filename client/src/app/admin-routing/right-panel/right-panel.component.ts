@@ -366,20 +366,29 @@ export class RightPanelComponent {
 
       const byteArray = workbook.saveToBufferSync();
 
-      return new Blob([byteArray]);
+      return new Blob([byteArray], {
+        type: `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`,
+      });
     }),
     switchMap((blob) =>
       !blob
         ? of(null)
-        : new Observable<{ url: string; name: string }>((subscriber) => {
+        : new Observable<{
+            url: string;
+            name: string;
+            dragAndDropDownloadURL: string;
+          }>((subscriber) => {
             const url = URL.createObjectURL(blob);
+
+            const name = `Admin routing ${new LuxonPipe().transform(
+              new Date(),
+              `yyyyMMddHHmmss`
+            )}.xlsx`;
 
             subscriber.next({
               url,
-              name: `Admin routing ${new LuxonPipe().transform(
-                new Date(),
-                `yyyyMMddHHmmss`
-              )}.xlsx`,
+              name,
+              dragAndDropDownloadURL: `${blob.type}:${name}:${url}`,
             });
 
             return () => URL.revokeObjectURL(url);

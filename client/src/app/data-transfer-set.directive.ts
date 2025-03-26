@@ -6,23 +6,39 @@ import {
   input,
 } from '@angular/core';
 
+type DataTransferSetParam = {
+  format: string;
+  data: string;
+};
+
 @Directive({
   selector: '[dataTransferSet]',
 })
 export class DataTransferSetDirective {
   private readonly elementRef = inject<ElementRef<HTMLElement>>(ElementRef);
 
-  readonly params = input<{ format: string; data: string }>();
+  readonly dataTransferSetParams = input<
+    DataTransferSetParam | DataTransferSetParam[]
+  >();
 
   @HostListener(`dragstart`, [`$event`]) onDragStart(dragEvent: DragEvent) {
-    let { format, data } = this.params() ?? {};
+    const dataTransfer = dragEvent.dataTransfer;
 
-    if (!format || !data) {
-      format = `text/plain`;
+    if (!dataTransfer) return;
 
-      data = this.elementRef.nativeElement.innerText;
+    let params = this.dataTransferSetParams() ?? [
+      {
+        format: `text/plain`,
+        data: this.elementRef.nativeElement.innerText,
+      },
+    ];
+
+    if (!Array.isArray(params)) params = [params];
+
+    dataTransfer.clearData();
+
+    for (const { format, data } of params) {
+      dataTransfer.setData(format, data);
     }
-
-    dragEvent.dataTransfer?.setData(format, data);
   }
 }
