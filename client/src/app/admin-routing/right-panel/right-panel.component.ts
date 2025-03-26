@@ -60,6 +60,7 @@ import xlsxInit, {
 //@ts-expect-error
 import wasmXlsxWriterPath from 'wasm-xlsxwriter/web/wasm_xlsxwriter_bg.wasm';
 
+import { DataTransferSetDirective } from '../../data-transfer-set.directive';
 import { LuxonPipe } from '../../luxon.pipe';
 import { AdminRoutingService } from '../admin-routing.service';
 import { columns } from '../configs/columns';
@@ -85,6 +86,8 @@ import {
     MatFormFieldModule,
     MatIconModule,
     MatSlideToggleModule,
+
+    DataTransferSetDirective,
   ],
   templateUrl: './right-panel.component.html',
   styleUrl: './right-panel.component.scss',

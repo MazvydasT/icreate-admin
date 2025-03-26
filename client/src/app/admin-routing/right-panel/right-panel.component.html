@@ -47,7 +47,7 @@
 
       <mat-chip-option [selected]="bin.isSelected" (selectionChange)="onBinSelectionChange($event.selected, bin)">
         <div class="bin-data-row">
-          <span class="bin-name">{{bin.name}}</span>
+          <span class="bin-name" [draggable]="!editingDisabled" dataTransferSet>{{bin.name}}</span>
 
           @if (partCountWidth ?? 0 > 0) {
           <mat-divider vertical="true"></mat-divider>
@@ -110,7 +110,9 @@
 
     @let bins = binsByTeam?.get(team);
 
-    <mat-form-field floatLabel="always" appearance="outline" class="team-members">
+    <mat-form-field floatLabel="always" appearance="outline" class="team-members" dropzone="copy"
+      (dragover)="!editingDisabled ? $event.preventDefault() : undefined"
+      (drop)="addBin($event.dataTransfer?.getData('text/plain') ?? '', team)">
       <mat-label>{{team}} team</mat-label>
 
       <mat-chip-grid #teamMembersDisplay multiple attr.aria-label="{{team}} team distribution bins"
@@ -120,7 +122,7 @@
 
         <mat-chip-option [selected]="bin.isSelected" (selectionChange)="onBinSelectionChange($event.selected, bin)">
           <div class="bin-data-row">
-            <span class="bin-name">{{bin.name}}</span>
+            <span class="bin-name" [draggable]="!editingDisabled" dataTransferSet>{{bin.name}}</span>
 
             @if (partCountWidth ?? 0 > 0) {
             <mat-divider vertical="true"></mat-divider>
