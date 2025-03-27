@@ -22,7 +22,7 @@
     "@angular/platform-browser-dynamic": "^19.2.3",
     "@angular/router": "^19.2.3",
     "ix": "^7.0.0",
-    "luxon": "^3.5.0",
+    "luxon": "^3.6.0",
     "rxjs": "~7.8.2",
     "tslib": "^2.8.1",
     "wasm-xlsxwriter": "^0.8.6"
