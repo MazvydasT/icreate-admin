@@ -102,6 +102,7 @@ export class RightPanelComponent {
     input.required<
       (Record<string, any> & { hasAssignee: boolean; newAssignee?: string })[]
     >();
+  readonly tableHTML = input.required<string>();
 
   private readonly adminRoutingService = inject(AdminRoutingService);
   private readonly router = inject(Router);

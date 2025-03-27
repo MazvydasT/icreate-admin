@@ -4,12 +4,11 @@
 
 <div id="table-outer-container">
 
-  <section id="table-container">
+  <section id="table-container" #tableContainer>
 
     @let taskData = tasks | async;
 
     @if (taskData) {
-
 
     <table mat-table [dataSource]="taskData" class="mat-elevation-z8">
 
@@ -59,7 +58,7 @@
   <app-right-panel id="right-panel" (vehicleLinesSet)="vehicleLinesSet.next($event)" (bins)="bins.next($event)"
     (binSelectionChange)="binSelectionChange.next($event)"
     [binsNotAssignedToTeam]="(binsNotAssignedToTeam | async) ?? []" [binPartCountChanged]="tasksAndBins | async"
-    [tasks]="(tasks | async) ?? []" />
+    [tasks]="(tasks | async) ?? []" [tableHTML]="tableContainer.innerHTML" />
 
   }
 </div>

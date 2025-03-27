@@ -17,7 +17,7 @@
 
       <a mat-fab extended [href]="downloadLinkAndName?.url" [download]="downloadLinkAndName?.name"
         [disabled]="(selectedCount?.all ?? 0) == 0 || !downloadLinkAndName" dataTransferSet
-        [dataTransferSetParams]="{format: 'DownloadURL', data: downloadLinkAndName?.dragAndDropDownloadURL ?? ''}"
+        [dataTransferSetParams]="[{format: 'DownloadURL', data: downloadLinkAndName?.dragAndDropDownloadURL ?? ''}, {format: 'text/html', data: tableHTML()}]"
         [attr.aria-label]="'Download ' + downloadButtonText">
 
         <mat-icon>file_download</mat-icon>
