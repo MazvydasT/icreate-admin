@@ -1,3 +1,15 @@
+<ng-template #snackBarTemplate>
+  <section id="snackBarContents">
+    <span matSnackBarLabel class="snackBarLabel">Table data copied to clipboard</span>
+    <span matSnackBarActions>
+      <button mat-icon-button matSnackBarAction (click)="snackBarRef?.dismissWithAction()"
+        aria-label="Close 'data copy' confirmation">
+        <mat-icon fontSet="material-symbols-outlined">close</mat-icon>
+      </button>
+    </span>
+  </section>
+</ng-template>
+
 @let scrollBarWidth = binConfigScroller.offsetWidth - binConfigScroller.clientWidth;
 @let rightPadding = 'max(calc(var(--gap-size) - ' + scrollBarWidth + 'px), 2px)';
 
@@ -6,29 +18,48 @@
 @let partCountWidth = largestCount.getBoundingClientRect().width;
 
 <div id="sticky-section">
-  <div class="buttons-container">
+  <div id="buttons-container">
     <div>
       @let selectedCount = selectedBinCount | async;
+      @let selected = selectedCount?.selected ?? 0;
+      @let all = selectedCount?.all ?? 1;
 
-      @let downloadButtonText = (selectedCount?.selected == 0 || selectedCount?.selected == selectedCount?.all) ?
-      'all' : 'selected';
+      @let downloadAll = selected == 0 || selected == all;
+      @let downloadButtonText = downloadAll ? 'all' : 'selected';
 
       @let downloadLinkAndName = downloadLink | async;
 
-      <a mat-fab extended [href]="downloadLinkAndName?.url" [download]="downloadLinkAndName?.name"
-        [disabled]="(selectedCount?.all ?? 0) == 0 || !downloadLinkAndName" dataTransferSet
-        [dataTransferSetParams]="[{format: 'DownloadURL', data: downloadLinkAndName?.dragAndDropDownloadURL ?? ''}, {format: 'text/html', data: tableHTML()}]"
-        [attr.aria-label]="'Download ' + downloadButtonText">
+      @let filteredTaskCount = tasks()?.length ?? 0;
+      @let allTaskCount = unfilteredTaskCount() ?? 1;
+      @let overlayPercentage = (filteredTaskCount == 0 ? 1 : (filteredTaskCount / allTaskCount)) * 100;
+      @let clipPath = 'xywh(0px 0px 100% ' + overlayPercentage + '%)';
 
-        <mat-icon>file_download</mat-icon>
+      @let dataTransferParams = [
+      {format: 'DownloadURL', data: downloadLinkAndName?.dragAndDropDownloadURL ?? ''},
+      {format: mimeTypeHTML, data: tableHTML()}
+      ];
 
-        <div id="download-button-text-container">
-          <span #downloadButtonTextSizer id="download-button-text-sizer">{{downloadButtonText}}</span>
+      @let copyLabel = 'Copy ' + downloadButtonText;
 
-          <span [style.width.px]="downloadButtonTextSizer.getBoundingClientRect().width"
-            id="download-button-text">{{downloadButtonText}}</span>
-        </div>
+      <button mat-mini-fab [disabled]="!tasks()" draggable="true" dataTransferSet
+        [dataTransferSetParams]="dataTransferParams" [attr.aria-label]="copyLabel" [title]="copyLabel"
+        (click)="copyTableDataToClipboard()" id="left-button">
+        <mat-icon fontSet="material-symbols-outlined">content_copy</mat-icon>
+        <mat-icon [style.clipPath]="clipPath" fontSet="material-symbols-outlined"
+          class="icon-overlay">content_copy</mat-icon>
+      </button>
+
+      @let downloadLabel = 'Download ' + downloadButtonText;
+
+      <a mat-mini-fab [href]="downloadLinkAndName?.url" [download]="downloadLinkAndName?.name"
+        [disabled]="!downloadLinkAndName" dataTransferSet [dataTransferSetParams]="dataTransferParams"
+        [attr.aria-label]="downloadLabel" [title]="downloadLabel" id="right-button">
+
+        <mat-icon fontSet="material-symbols-outlined">file_save</mat-icon>
+        <mat-icon [style.clipPath]="clipPath" fontSet="material-symbols-outlined"
+          class="icon-overlay">file_save</mat-icon>
       </a>
+
     </div>
 
     <mat-slide-toggle #editSwitch labelPosition="before">Edit</mat-slide-toggle>
@@ -68,7 +99,7 @@
 
 <section #binConfigScroller id="bin-config-scroller">
 
-  <div [style.padding-right]="rightPadding" class="bin-config-container">
+  <div [style.padding-right]="rightPadding" id="bin-config-container">
     @let editingDisabled = !editSwitch.checked;
 
     @let binsByTeam = binsWithPartCountByTeam | async;

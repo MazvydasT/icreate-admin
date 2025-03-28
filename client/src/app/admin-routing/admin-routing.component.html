@@ -58,7 +58,8 @@
   <app-right-panel id="right-panel" (vehicleLinesSet)="vehicleLinesSet.next($event)" (bins)="bins.next($event)"
     (binSelectionChange)="binSelectionChange.next($event)"
     [binsNotAssignedToTeam]="(binsNotAssignedToTeam | async) ?? []" [binPartCountChanged]="tasksAndBins | async"
-    [tasks]="(tasks | async) ?? []" [tableHTML]="tableContainer.innerHTML" />
+    [tasks]="(tasks | async)" [unfilteredTaskCount]="(tasksAndBins | async)?.tasks?.length ?? null"
+    [tableHTML]="tableContainer.innerHTML" />
 
   }
 </div>

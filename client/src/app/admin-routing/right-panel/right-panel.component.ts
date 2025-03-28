@@ -6,6 +6,8 @@ import {
   inject,
   input,
   model,
+  TemplateRef,
+  ViewChild,
 } from '@angular/core';
 import {
   outputFromObservable,
@@ -23,6 +25,13 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import {
+  MatSnackBar,
+  MatSnackBarAction,
+  MatSnackBarActions,
+  MatSnackBarLabel,
+  MatSnackBarRef,
+} from '@angular/material/snack-bar';
 
 import { concat, count, first, from, toArray, toMap } from 'ix/Ix.iterable';
 import {
@@ -86,6 +95,9 @@ import {
     MatFormFieldModule,
     MatIconModule,
     MatSlideToggleModule,
+    MatSnackBarAction,
+    MatSnackBarActions,
+    MatSnackBarLabel,
 
     DataTransferSetDirective,
   ],
@@ -95,18 +107,23 @@ import {
 })
 export class RightPanelComponent {
   readonly teams = teamNames;
+  readonly mimeTypeHTML = `text/html`;
 
   readonly binsNotAssignedToTeam = input.required<Bin[]>();
   readonly binPartCountChanged = input.required();
-  readonly tasks =
-    input.required<
-      (Record<string, any> & { hasAssignee: boolean; newAssignee?: string })[]
-    >();
+  readonly tasks = input.required<
+    | (Record<string, any> & { hasAssignee: boolean; newAssignee?: string })[]
+    | null
+  >();
+  readonly unfilteredTaskCount = input.required<number | null>();
   readonly tableHTML = input.required<string>();
 
   private readonly adminRoutingService = inject(AdminRoutingService);
   private readonly router = inject(Router);
   private readonly activatedRoute = inject(ActivatedRoute);
+  private readonly snackBar = inject(MatSnackBar);
+
+  @ViewChild(`snackBarTemplate`) snackBarTemplate!: TemplateRef<any>;
 
   private readonly activationEndQueryParams = this.router.events.pipe(
     filter((event) => event instanceof ActivationEnd),
@@ -307,7 +324,7 @@ export class RightPanelComponent {
     xlsxInit({ module_or_path: wasmXlsxWriterPath }),
   ]).pipe(
     switchMap(async ([tasks]) => {
-      if (tasks.length == 0) return null;
+      if (!tasks || tasks.length == 0) return null;
 
       const dataToExportByAssignee = from(tasks).pipe(
         groupBy(({ hasAssignee, assignee, newAssignee }) =>
@@ -514,5 +531,20 @@ export class RightPanelComponent {
     bin.isSelected = isSelected;
 
     this.binSelectionChange.next(true);
+  }
+
+  snackBarRef: MatSnackBarRef<any> | undefined;
+  async copyTableDataToClipboard() {
+    await navigator.clipboard.write([
+      new ClipboardItem({
+        'text/html': this.tableHTML(),
+      }),
+    ]);
+
+    this.snackBarRef = this.snackBar.openFromTemplate(this.snackBarTemplate, {
+      horizontalPosition: `center`,
+      verticalPosition: `top`,
+      duration: 2000,
+    });
   }
 }
