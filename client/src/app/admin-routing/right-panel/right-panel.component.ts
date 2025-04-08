@@ -102,7 +102,10 @@ import {
     DataTransferSetDirective,
   ],
   templateUrl: './right-panel.component.html',
-  styleUrl: './right-panel.component.scss',
+  styleUrls: [
+    './right-panel.component.scss',
+    './right-panel.component.snackbar.scss',
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RightPanelComponent {

@@ -1,0 +1,11 @@
+#snackBarContents {
+  display: flex;
+
+  .snackBarLabel {
+    text-align: center;
+  }
+
+  button {
+    color: var(--mat-sys-inverse-primary);
+  }
+}

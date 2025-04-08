@@ -10,18 +10,6 @@
   initial-value: 100%;
 }
 
-#snackBarContents {
-  display: flex;
-
-  .snackBarLabel {
-    text-align: center;
-  }
-
-  button {
-    color: var(--mat-sys-inverse-primary);
-  }
-}
-
 :host ::ng-deep {
   .mat-mdc-standard-chip {
     .mdc-evolution-chip__cell--primary,
