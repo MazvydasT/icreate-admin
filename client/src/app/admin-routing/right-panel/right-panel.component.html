@@ -31,8 +31,7 @@
 
       @let filteredTaskCount = tasks()?.length ?? 0;
       @let allTaskCount = unfilteredTaskCount() ?? 1;
-      @let overlayPercentage = (filteredTaskCount == 0 ? 1 : (filteredTaskCount / allTaskCount)) * 100;
-      @let clipPath = 'xywh(0px 0px 100% ' + overlayPercentage + '%)';
+      @let overlayPercentage = ((filteredTaskCount == 0 ? 1 : (filteredTaskCount / allTaskCount)) * 100) + '%';
 
       @let dataTransferParams = [
       {format: 'DownloadURL', data: downloadLinkAndName?.dragAndDropDownloadURL ?? ''},
@@ -44,8 +43,9 @@
       <button mat-mini-fab [disabled]="!tasks()" draggable="true" dataTransferSet
         [dataTransferSetParams]="dataTransferParams" [attr.aria-label]="copyLabel" [title]="copyLabel"
         (click)="copyTableDataToClipboard()" id="left-button">
+
         <mat-icon fontSet="material-symbols-outlined">content_copy</mat-icon>
-        <mat-icon [style.clipPath]="clipPath" fontSet="material-symbols-outlined"
+        <mat-icon [style.--overlay-percentage]="overlayPercentage" fontSet="material-symbols-outlined"
           class="icon-overlay">content_copy</mat-icon>
       </button>
 
@@ -56,7 +56,7 @@
         [attr.aria-label]="downloadLabel" [title]="downloadLabel" id="right-button">
 
         <mat-icon fontSet="material-symbols-outlined">file_save</mat-icon>
-        <mat-icon [style.clipPath]="clipPath" fontSet="material-symbols-outlined"
+        <mat-icon [style.--overlay-percentage]="overlayPercentage" fontSet="material-symbols-outlined"
           class="icon-overlay">file_save</mat-icon>
       </a>
 
