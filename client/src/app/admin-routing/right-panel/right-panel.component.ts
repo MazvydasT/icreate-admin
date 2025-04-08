@@ -332,7 +332,7 @@ export class RightPanelComponent {
       const dataToExportByAssignee = from(tasks).pipe(
         groupBy(
           ({ hasAssignee, assignee, newAssignee }) =>
-            ((hasAssignee ? assignee : newAssignee) as string)
+            ((hasAssignee || !newAssignee ? assignee : newAssignee) as string)
               .trim()
               .toLocaleLowerCase()
               .substring(0, 31) // Excel sheet name is limited to 31 characters
