@@ -22,7 +22,7 @@ import {
   map,
   of,
   share,
-  Subject
+  Subject,
 } from 'rxjs';
 
 import { LuxonPipe } from '../luxon.pipe';
@@ -104,7 +104,7 @@ export class AdminRoutingComponent {
   private readonly notInTeamBinsByName = new Map<string, Bin>();
   readonly tasksAndBins = combineLatest([this.bins, this.openAdminTasks]).pipe(
     map(([{ bins, binsByName }, tasks]) => {
-      bins.forEach((bin) => (bin.partCount = 0));
+      bins.forEach((bin) => (bin.workValue = 0));
 
       const tasksIterable = from(tasks);
 
@@ -123,10 +123,10 @@ export class AdminRoutingComponent {
         withHasAssigneeIterable.pipe(
           filterIx(({ hasAssignee }) => hasAssignee),
           mapIx((task) => ({ ...task, newAssignee: undefined })),
-          tapIx(({ assignee, part_count }) => {
+          tapIx(({ assignee, part_count, team }) => {
             const bin = binsByName.get(assignee.trim().toLocaleLowerCase());
 
-            if (!!bin) bin.partCount += part_count;
+            if (!!bin) bin.workValue += team == 'Initiate' ? 1 : part_count;
           })
         )
       );
@@ -137,17 +137,18 @@ export class AdminRoutingComponent {
             filterIx(({ hasAssignee }) => !hasAssignee),
             orderByDescending(({ part_count }) => part_count),
             mapIx((task) => {
-              const binWithLowestPartCount = first(
+              const binWithLowestWorkValue = first(
                 from(bins).pipe(
-                  orderBy(({ partCount }) => partCount),
+                  orderBy(({ workValue }) => workValue),
                   filterIx(({ teams }) => teams.has(task.team))
                 )
               );
 
-              if (!!binWithLowestPartCount)
-                binWithLowestPartCount.partCount += task.part_count;
+              if (!!binWithLowestWorkValue)
+                binWithLowestWorkValue.workValue +=
+                  task.team == 'Initiate' ? 1 : task.part_count;
 
-              const newAssignee = binWithLowestPartCount?.name;
+              const newAssignee = binWithLowestWorkValue?.name;
 
               return { ...task, newAssignee };
             })
@@ -196,7 +197,7 @@ export class AdminRoutingComponent {
               existingBin = {
                 name: assignee,
                 isSelected: false,
-                partCount: 0,
+                workValue: 0,
                 indices: new Set(),
                 teams: new Set(),
               };
@@ -204,13 +205,13 @@ export class AdminRoutingComponent {
               this.notInTeamBinsByName.set(assignee, existingBin);
             }
 
-            existingBin.partCount = sum(group, {
+            existingBin.workValue = sum(group, {
               selector: ({ part_count }) => part_count,
             });
 
             return existingBin;
           }),
-          orderByDescending(({ partCount }) => partCount)
+          orderByDescending(({ workValue }) => workValue)
         )
       );
 

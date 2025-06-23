@@ -15,7 +15,7 @@
 
 <span id="largestCount" #largestCount>{{maxPartCount | async}}</span>
 
-@let partCountWidth = largestCount.getBoundingClientRect().width;
+@let largestCountWidth = largestCount.getBoundingClientRect().width;
 
 <div id="sticky-section">
   <div id="buttons-container">
@@ -81,9 +81,9 @@
         <div class="bin-data-row">
           <span class="bin-name" [draggable]="!editingDisabled" dataTransferSet>{{bin.name}}</span>
 
-          @if (partCountWidth ?? 0 > 0) {
+          @if (largestCountWidth ?? 0 > 0) {
           <mat-divider vertical="true"></mat-divider>
-          <span [style.width.px]="partCountWidth" class="bin-part-count" [style.--part-count]="bin.partCount"></span>
+          <span [style.width.px]="largestCountWidth" class="bin-work-value" [style.--work-value]="bin.workValue"></span>
           }
         </div>
       </mat-chip-option>
@@ -156,9 +156,9 @@
           <div class="bin-data-row">
             <span class="bin-name" [draggable]="!editingDisabled" dataTransferSet>{{bin.name}}</span>
 
-            @if (partCountWidth ?? 0 > 0) {
+            @if (largestCountWidth ?? 0 > 0) {
             <mat-divider vertical="true"></mat-divider>
-            <span [style.width.px]="partCountWidth" class="bin-part-count" [style.--part-count]="bin.partCount"></span>
+            <span [style.width.px]="largestCountWidth" class="bin-work-value" [style.--work-value]="bin.workValue"></span>
             }
           </div>
           <button matChipRemove [disabled]="editingDisabled" [attr.aria-label]="'Remove ' + bin.name"
