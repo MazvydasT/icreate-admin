@@ -83,7 +83,7 @@
 
           @if (largestCountWidth ?? 0 > 0) {
           <mat-divider vertical="true"></mat-divider>
-          <span [style.width.px]="largestCountWidth" class="bin-work-value" [style.--work-value]="bin.workValue"></span>
+          <span title="Parts" [style.width.px]="largestCountWidth" class="bin-work-value" [style.--work-value]="bin.workValue"></span>
           }
         </div>
       </mat-chip-option>
@@ -158,7 +158,7 @@
 
             @if (largestCountWidth ?? 0 > 0) {
             <mat-divider vertical="true"></mat-divider>
-            <span [style.width.px]="largestCountWidth" class="bin-work-value" [style.--work-value]="bin.workValue"></span>
+            <span [title]="team == `Initiate` ? `iCREATEs` : `Parts`" [style.width.px]="largestCountWidth" class="bin-work-value" [style.--work-value]="bin.workValue"></span>
             }
           </div>
           <button matChipRemove [disabled]="editingDisabled" [attr.aria-label]="'Remove ' + bin.name"
