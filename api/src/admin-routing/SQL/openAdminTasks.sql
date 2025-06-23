@@ -30,7 +30,7 @@ WITH
       WHERE
         status IN ('Initiate', 'Compile', 'Revise') AND
         TRIM(LOWER(initiator)) NOT LIKE 'leadeng%' AND
-        TRIM(UPPER(change_lead_programmes.programme)) NOT LIKE 'EBA%'
+        TRIM(UPPER(change_lead_programmes.programme)) NOT LIKE 'EB%'
       
       GROUP BY
         engineering_changes.business_change_id,

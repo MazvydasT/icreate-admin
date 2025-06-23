@@ -1,4 +1,4 @@
-@property --part-count {
+@property --work-value {
   syntax: "<integer>";
   inherits: false;
   initial-value: 0;
@@ -137,16 +137,16 @@
         flex: 1 1 0px;
       }
 
-      .bin-part-count {
+      .bin-work-value {
         text-align: right;
 
         transition: width var(--transition-duration),
-          --part-count var(--transition-duration);
-        counter-set: part-count var(--part-count);
+          --work-value var(--transition-duration);
+        counter-set: work-value var(--work-value);
       }
 
-      .bin-part-count::after {
-        content: counter(part-count);
+      .bin-work-value::after {
+        content: counter(work-value);
       }
     }
 
