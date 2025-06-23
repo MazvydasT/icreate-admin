@@ -6,7 +6,7 @@ SELECT * FROM EXTERNAL_QUERY(
   FROM change_lead_programmes
 
   WHERE
-    TRIM(UPPER(vehicle_line)) NOT LIKE 'EBA%' AND
+    TRIM(UPPER(vehicle_line)) NOT LIKE 'EB%' AND
     NULLIF(TRIM(vehicle_line), '') IS NOT NULL
   """
 )
