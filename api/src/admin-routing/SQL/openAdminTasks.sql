@@ -15,7 +15,9 @@ WITH
         ) part_count,
 
         change_lead_programmes.vehicle_line,
-        change_lead_programmes.build_event
+        change_lead_programmes.build_event,
+
+        change_affected_parts_filters.commodity_group
 
       FROM engineering_changes
 
@@ -26,6 +28,7 @@ WITH
 
       LEFT JOIN change_parts ON engineering_changes.id = change_parts.engineering_change_id
       LEFT JOIN change_lead_programmes ON engineering_changes.change_lead_programme_id = change_lead_programmes.id
+      LEFT JOIN change_affected_parts_filters ON engineering_changes.change_affected_parts_filters_id = change_affected_parts_filters.id
 
       WHERE
         status IN ('Initiate', 'Compile', 'Revise') AND
@@ -36,7 +39,8 @@ WITH
         engineering_changes.business_change_id,
         engineering_changes.status,
         change_lead_programmes.vehicle_line,
-        change_lead_programmes.build_event
+        change_lead_programmes.build_event,
+        commodity_group
       """
     )
   ),
