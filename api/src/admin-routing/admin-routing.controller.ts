@@ -9,7 +9,12 @@ import vehicleLinesSQL from './SQL/vehicleLines.sql';
 const lastModifiedConfigForOpenAdminTasks: [Config, ...Config[]] = [
   {
     connectionId: `jlr-ddc1-prod.europe-west1.ods_icreate_change_service_sql_connection`,
-    tables: [`engineering_changes`, `change_parts`, `change_lead_programmes`]
+    tables: [
+      `engineering_changes`,
+      `change_parts`,
+      `change_lead_programmes`,
+      `change_affected_parts_filters`
+    ]
   },
   {
     connectionId: `jlr-ddc1-prod.europe-west1.ods_icreate_workflow_sql_connection`,
