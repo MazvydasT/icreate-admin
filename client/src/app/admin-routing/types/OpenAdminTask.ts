@@ -8,4 +8,5 @@ export type OpenAdminTask = {
     value: string;
   };
   assignee: string;
+  commodity_group?: string;
 };

@@ -62,6 +62,10 @@ export class AdminRoutingComponent {
       const luxon = new LuxonPipe();
 
       const assignTeam = (record: OpenAdminTask): TeamName => {
+        if(record.commodity_group == `AAA_002 - IVS`) {
+          return 'Absolute';
+        }
+
         if (record.status.trim().toLocaleLowerCase() == `initiate`) {
           return 'Initiate';
         }

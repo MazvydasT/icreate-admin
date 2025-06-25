@@ -3,6 +3,7 @@ export const columns = [
   { field: `status`, name: `Status`, exportColumnWidth: 8 },
   { field: `vehicle_line`, name: `Vehicle line`, exportColumnWidth: 14 },
   { field: `build_event`, name: `Build event`, exportColumnWidth: 15 },
+  { field: `commodity_group`, name: `Commodity group`, exportColumnWidth: 35 },
   {
     field: `landed_at`,
     name: `Landed at`,
