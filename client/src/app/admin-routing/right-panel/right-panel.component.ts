@@ -1,19 +1,19 @@
 import { AsyncPipe } from '@angular/common';
 import {
-    ChangeDetectionStrategy,
-    Component,
-    DestroyRef,
-    inject,
-    input,
-    model,
-    TemplateRef,
-    ViewChild,
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  inject,
+  input,
+  model,
+  TemplateRef,
+  ViewChild,
 } from '@angular/core';
 import {
-    outputFromObservable,
-    outputToObservable,
-    toObservable,
-    toSignal,
+  outputFromObservable,
+  outputToObservable,
+  toObservable,
+  toSignal,
 } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, ActivationEnd, Router } from '@angular/router';
@@ -26,48 +26,47 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import {
-    MatSnackBar,
-    MatSnackBarAction,
-    MatSnackBarActions,
-    MatSnackBarLabel,
-    MatSnackBarRef,
+  MatSnackBar,
+  MatSnackBarAction,
+  MatSnackBarActions,
+  MatSnackBarLabel,
+  MatSnackBarRef,
 } from '@angular/material/snack-bar';
 
 import { concat, count, first, from, toArray, toMap } from 'ix/Ix.iterable';
 import {
-    concatWith,
-    distinct,
-    filter as filterIx,
-    flatMap,
-    groupBy,
-    map as mapIx,
-    orderBy,
-    orderByDescending,
+  concatWith,
+  distinct,
+  filter as filterIx,
+  flatMap,
+  groupBy,
+  map as mapIx,
+  orderBy,
+  orderByDescending,
 } from 'ix/Ix.iterable.operators';
 
 import {
-    BehaviorSubject,
-    combineLatest,
-    filter,
-    map,
-    Observable,
-    of,
-    shareReplay,
-    skip,
-    startWith,
-    switchMap,
+  BehaviorSubject,
+  combineLatest,
+  filter,
+  map,
+  Observable,
+  of,
+  shareReplay,
+  skip,
+  startWith,
+  switchMap,
 } from 'rxjs';
 
 import xlsxInit, {
-    Format,
-    Table,
-    TableColumn,
-    TableStyle,
-    Workbook,
+  Format,
+  Table,
+  TableColumn,
+  TableStyle,
+  Workbook,
 } from 'wasm-xlsxwriter/web';
 
-//@ts-expect-error
-import wasmXlsxWriterPath from 'wasm-xlsxwriter/web/wasm_xlsxwriter_bg.wasm';
+import wasmXlsxWriterPath from 'wasm-xlsxwriter/web/wasm_xlsxwriter_bg.wasm?url';
 
 import { DataTransferSetDirective } from '../../data-transfer-set.directive';
 import { LuxonPipe } from '../../luxon.pipe';
@@ -76,10 +75,10 @@ import { columns } from '../configs/columns';
 
 import { Bin } from '../types/Bin';
 import {
-    queryParamByTeamName,
-    TeamName,
-    teamNameByQueryParam,
-    teamNames,
+  queryParamByTeamName,
+  TeamName,
+  teamNameByQueryParam,
+  teamNames,
 } from '../types/Team';
 
 @Component({
@@ -390,7 +389,7 @@ export class RightPanelComponent {
 
       const byteArray = workbook.saveToBufferSync();
 
-      return new Blob([byteArray], {
+      return new Blob([byteArray as BlobPart], {
         type: `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`,
       });
     }),

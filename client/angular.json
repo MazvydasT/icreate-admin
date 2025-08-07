@@ -69,10 +69,7 @@
         "serve": {
           "builder": "@angular/build:dev-server",
           "options": {
-            "proxyConfig": "src/proxy.conf.json",
-            "prebundle": {
-              "exclude": ["wasm-xlsxwriter/web"]
-            }
+            "proxyConfig": "src/proxy.conf.json"
           },
           "configurations": {
             "production": {
