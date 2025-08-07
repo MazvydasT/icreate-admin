@@ -25,6 +25,7 @@ import {
   Subject,
 } from 'rxjs';
 
+import { DateTime } from 'luxon';
 import { LuxonPipe } from '../luxon.pipe';
 import { AdminRoutingService } from './admin-routing.service';
 import { columns } from './configs/columns';
@@ -62,7 +63,7 @@ export class AdminRoutingComponent {
       const luxon = new LuxonPipe();
 
       const assignTeam = (record: OpenAdminTask): TeamName => {
-        if(record.commodity_group == `AAA_002 - IVS`) {
+        if (record.commodity_group == `AAA_002 - IVS`) {
           return 'Absolute';
         }
 
@@ -87,12 +88,27 @@ export class AdminRoutingComponent {
         return 'Delta';
       };
 
-      return records.map((record) => ({
-        ...record,
-        landed_at: luxon.transform(record.landed_at.value, `DATETIME_SHORT`),
-        landed_at_date: new Date(record.landed_at.value),
-        team: assignTeam(record),
-      }));
+      return records.map((record) => {
+        const utcDateTime = DateTime.fromISO(record.landed_at.value, {
+          zone: `utc`,
+        });
+
+        const jsDate = utcDateTime.toJSDate();
+
+        // Excel does not have a way to deal with timezone offsets,
+        // therefore local offset must be applied to UTC datetime
+        // before Date object is written to an Excel file
+        const jsDateForExportToExcel = new Date(
+          jsDate.getTime() - jsDate.getTimezoneOffset() * 60 * 1000
+        );
+
+        return {
+          ...record,
+          landed_at: luxon.transform(jsDate, `DATETIME_SHORT`),
+          landed_at_date: jsDateForExportToExcel,
+          team: assignTeam(record),
+        };
+      });
     }),
     share()
   );
