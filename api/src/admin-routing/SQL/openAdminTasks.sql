@@ -3,7 +3,7 @@ WITH
     SELECT * FROM EXTERNAL_QUERY(
       "jlr-ddc1-prod.europe-west1.ods_icreate_change_service_sql_connection",
       """
-      SELECT DISTINCT
+      SELECT
         engineering_changes.business_change_id,
         CAST(SUBSTRING_INDEX(engineering_changes.business_change_id, '-', 1) AS SIGNED) change_number,
         engineering_changes.status,
