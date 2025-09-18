@@ -1,7 +1,11 @@
-SELECT * FROM EXTERNAL_QUERY(
+SELECT DISTINCT
+  * REPLACE(
+    TRIM(vehicle_line) AS vehicle_line
+  )
+FROM EXTERNAL_QUERY(
   "jlr-ddc1-prod.europe-west1.ods_icreate_change_service_sql_connection",
   """
-  SELECT DISTINCT TRIM(vehicle_line) vehicle_line
+  SELECT vehicle_line
 
   FROM change_lead_programmes
 
